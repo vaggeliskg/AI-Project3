@@ -25,7 +25,7 @@ def read_var_file(rlfap_folder_path, file_name_var):
 
 # Call the function to read the .txt file and store its contents in a list
 data_from_txt = read_var_file(rlfap_folder_path,'var2-f24.txt')
-
+#print(data_from_txt)
 
 def read_dom_file(rlfap_folder_path, file_name_dom):
     dom_file_path = os.path.join(rlfap_folder_path, file_name_dom)
@@ -43,7 +43,9 @@ def read_dom_file(rlfap_folder_path, file_name_dom):
         lines = file.readlines()[1:]  # Skip the first line
         for line in lines:
             first_num, second_num = line.split()
-            if second_num == '0':
+            first_num = int(first_num)
+            second_num = int(second_num)
+            if second_num == 0:
                 dom_dict[first_num] = rests[0]  # Assign the split values directly for keys with '0'
             else:
                 dom_dict[first_num] = rests[1]  # Assign the split values directly for keys with '1'
@@ -51,4 +53,25 @@ def read_dom_file(rlfap_folder_path, file_name_dom):
     return dom_dict
 
 data_from_dom = read_dom_file(rlfap_folder_path,'dom2-f24.txt')
-print(data_from_dom)
+#print(data_from_dom)
+
+def read_neigh_file(rlfap_folder_path, file_name_neigh):
+    neigh_file_path = os.path.join(rlfap_folder_path, file_name_neigh)
+    
+    neigh_dict = {var: [] for var in data_from_txt}
+    with open(neigh_file_path, 'r') as file:
+        n_lines = file.readlines()[1:]  # Skip the first line
+
+        for var in data_from_txt:
+            for line in n_lines:
+                first_number, second_number,symbol,value = line.split()  # Split the line into individual numbers
+                first_number = int(first_number)
+                second_number = int(second_number)
+                if var == first_number:
+                    neigh_dict[var].append(second_number)
+                elif var == second_number:
+                    neigh_dict[var].append(first_number)
+    return neigh_dict
+
+data_from_neigh = read_neigh_file(rlfap_folder_path,'ctr2-f24.txt')
+#print(data_from_neigh)
