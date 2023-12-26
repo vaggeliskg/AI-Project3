@@ -342,7 +342,6 @@ def AC4(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
 
 # Variable ordering
 
-
 def first_unassigned_variable(assignment, csp):
     """The default variable order."""
     return first([var for var in csp.variables if var not in assignment])
@@ -390,6 +389,9 @@ def forward_checking(csp, var, value, assignment, removals):
                 if not csp.constraints(var, value, B, b):
                     csp.prune(B, b, removals)
             if not csp.curr_domains[B]:
+                c = csp.find_const(var,B)
+                for things in c:
+                    csp.value_weights[things] +=1
                 return False
     return True
 
