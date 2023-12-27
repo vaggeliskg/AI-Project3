@@ -113,23 +113,29 @@ class RLFA(csp.CSP):
         csp.CSP.__init__(self,data_from_var,data_from_dom,data_from_neigh,constraints)
 
         self.weight = weight
-        self.value_weights = {}  # Dictionary to hold value-weight associations
+        self.weights = {}  # Dictionary to hold value-weight associations
 
-    def assign_weight_to_value(self, const, weight):
-        self.value_weights[const] = weight
+    def assign_weight_to_value(self, edge, weight):
+        self.weights[edge] = weight
     
-    def find_const(self,var1,var2):
-        c_tuple = ()
-        tuple = ()
-        for c in constr_data:
-            if((c[0] == var1 and c[1] == var2) or (c[1] == var1 and c[0] == var2)):
-                tuple = c_tuple + (c,)
-        return tuple
+    # def find_const(self,var1,var2):
+    #     c_tuple = ()
+    #     tuple = ()
+    #     for c in constr_data:
+    #         if((c[0] == var1 and c[1] == var2) or (c[1] == var1 and c[0] == var2)):
+    #             tuple = c_tuple + (c,)
+    #     return tuple
 
 problem = RLFA(1)
 def initiliaze():
     for c in constr_data:
-        problem.assign_weight_to_value(c,problem.weight)
+        var1 = c[0]
+        var2 = c[1]
+        edge1 = (var1,var2)
+        edge2 = (var2,var1)
+        
+        problem.assign_weight_to_value(edge1,problem.weight)
+        problem.assign_weight_to_value(edge2,problem.weight)
 
     for var in data_from_var:
         var_weight[var] = 0
@@ -145,22 +151,53 @@ def fix_var_weights():
 
 
 def my_heuristic(assignment, csp):
-    csp.support_pruning()
-    min_fraction = float('inf')
-    selected_var = None
-    #fix_var_weights()
+    # csp.support_pruning()
+    # min_fraction = float('inf')
+    # selected_var = None
+    # fix_var_weights()
 
-    for var in csp.variables:
-        if var not in assignment:
-            fix_var_weights()
-            remaining_domain = len(csp.curr_domains[var])
-            if remaining_domain > 0:
-                fraction_calc = remaining_domain / var_weight[var]
-                if fraction_calc < min_fraction:
-                    min_fraction = fraction_calc
-                    selected_var = var
+    # for var in csp.variables:
+    #     if var not in assignment:
+    #         remaining_domain = len(csp.curr_domains[var])
+    #         if remaining_domain > 0:
+    #             fraction_calc = remaining_domain / var_weight[var]
+    #             if fraction_calc < min_fraction:
+    #                 min_fraction = fraction_calc
+    #                 selected_var = var
 
-    return selected_var
+    #return selected_var
+    csp.support_pruning()  
+    total_weight = {}
+    for edge in csp.weights:
+        var1, var2 = edge
+        # if var1 in assignment.keys() or var2 in assignment.keys():
+        #     continue 
+        if var1 in total_weight.keys():
+            value = total_weight[var1]
+            value += csp.weights[edge]
+            total_weight.update({var1 : value})
+        else:
+            total_weight[var1] = csp.weights[edge]
+        if var2 in total_weight.keys():
+            value = total_weight[var2]
+            value += csp.weights[edge]
+            total_weight.update({var2 : value})
+        else:
+            total_weight[var2] = csp.weights[edge]
+
+    minim = None
+    for var in total_weight:
+        if var in assignment:
+            continue
+        cur_dom_wdeg = len(csp.curr_domains[var]) / total_weight[var]
+        if minim == None:
+            minim = (cur_dom_wdeg, var)
+        elif cur_dom_wdeg < minim[0]:
+            minim = (cur_dom_wdeg, var)
+    if minim == None:
+        pass
+    return minim[1]
+
 
 def call_search():
     result = csp.backtracking_search(problem,my_heuristic,csp.unordered_domain_values,csp.forward_checking)

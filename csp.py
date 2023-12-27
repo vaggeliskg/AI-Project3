@@ -389,9 +389,8 @@ def forward_checking(csp, var, value, assignment, removals):
                 if not csp.constraints(var, value, B, b):
                     csp.prune(B, b, removals)
             if not csp.curr_domains[B]:
-                c = csp.find_const(var,B)
-                for things in c:
-                    csp.value_weights[things] +=1
+                csp.value_weights[(var, B)] += 1
+                csp.value_weights[(B, var)] += 1
                 return False
     return True
 
